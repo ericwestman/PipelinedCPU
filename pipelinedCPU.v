@@ -5,7 +5,7 @@ module CPU(clk);
 
 	// Registers
 	// reg [31:0] PC, Regfile[0:31], Memory[0:1023], MDR, A, B, ALUResult, IR;
-	reg [31:0] PC, Regfile[0:31], Memory[0:1023];
+	reg [31:0] PCReg, Regfile[0:31], Memory[0:1023];
 	reg [2:0]  stateA, stateB, stateC, stateD, stateE;
 
 
@@ -76,23 +76,23 @@ module CPU(clk);
 
 	integer i;
 	initial begin 
-		PC = 0;
+		PCReg = 0;
 		stateA = 0; stateB = 0; stateC = 0; stateD = 0; stateE = 0; 
 		for ( i=0; i<32; i = i+1 ) begin
       		Regfile[i] = 0000_0000_0000_0000_0000_0000_0000_0000;
    		end
    		Memory[1021] = 'h00000001;
    		Memory[1022] = 'h00000002;
-		$readmemb("..\\..\\MARS\\allinstructions.dat", Memory);
+		$readmemb("instructions.dat", Memory);
 	end
 
 	always @(posedge clk) begin
 
 		case (stateA)
 			IF: begin
-				IFIDReg[IR] <= Memory[PC];
-				PC <= PC + 1;
-				IFIDReg[PC] <= PC + 1;
+				IFIDReg[IR] <= Memory[PCReg];
+				PCReg <= PCReg + 1;
+				IFIDReg[PC] <= PCReg + 1;
 				stateA = ID;
 			end
 			
@@ -100,10 +100,10 @@ module CPU(clk);
 				IDEXReg[A] <= Regfile[rs];
 				IDEXReg[B] <= Regfile[rtID];
 				if(opcode == OP_BNE) begin
-					IDEXReg[ID_ALUResult] <= PC + immediateID;
+					IDEXReg[ID_ALUResult] <= PCReg + immediateID;
 				end
 				else if (opcode == OP_J) begin
-					PC <= {PC[31:28],IR[25],IR[25],IR[25:0]};
+					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				
 				else if (opcode == OP_R_TYPE || opcode == OP_XORI || opcode == OP_LW || opcode == OP_SW) begin
@@ -119,17 +119,17 @@ module CPU(clk);
 					EXMEMReg[EX_ALUResult] = IDEXReg[A] + immediateEX;
 				end
 				else if (opcode == OP_JAL) begin
-					PC <= {PC[31:28],IR[25],IR[25],IR[25:0]};
+					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				else if (opcode == OP_BNE) begin
-					if (IDEXReg[A] != IDEXReg[B]) PC <= EXMEMReg[ID_ALUResult];
+					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
 				end
 				else if (opcode == OP_XORI) begin
 					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
 				end
 				else if (opcode == OP_R_TYPE) begin
 					if (func == FUNC_JR) begin
-						PC <= IDEXReg[A];
+						PCReg <= IDEXReg[A];
 					end
 					else if (func == FUNC_ADD) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
@@ -151,7 +151,7 @@ module CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
 				end
 				else if(opcode == OP_SW) begin
-					Memory[EXMEM[EX_ALUResult]] = EXMEMReg[B];
+					Memory[EXMEMReg[EX_ALUResult]] = EXMEMReg[B];
 				end
 			
 				stateA = WB;
@@ -186,7 +186,7 @@ module CPU(clk);
 endmodule
 
 
-module CPU_TESTBENCH();
+module PIPELINED_CPU_TESTBENCH();
   // Inputs
   reg clk;
 
