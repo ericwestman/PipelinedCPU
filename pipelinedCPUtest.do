@@ -28,7 +28,14 @@ add wave -noupdate {/MY_CPU/Regfile[16]}
 add wave -noupdate {/MY_CPU/Regfile[17]}
 add wave -noupdate {/MY_CPU/Regfile[29]}
 add wave -noupdate {/MY_CPU/Regfile[31]}
-add wave -noupdate {/MY_CPU/Memory[1017]}
+add wave -noupdate {/MY_CPU/Memory[1021]}
+add wave -noupdate {/MY_CPU/Memory[1022]}
+add wave -noupdate {/MY_CPU/stateA}
+add wave -noupdate {/MY_CPU/stateB}
+add wave -noupdate {/MY_CPU/stateC}
+add wave -noupdate {/MY_CPU/stateD}
+add wave -noupdate {/MY_CPU/stateE}
+add wave -noupdate {/MY_CPU/IFIDReg[1]}
 
 # 6) Run for x ns
 run 5000

@@ -1,4 +1,4 @@
-module CPU(clk);
+module PIPELINED_CPU(clk);
 
 	// Inputs
 	input clk;
@@ -37,7 +37,10 @@ module CPU(clk);
 
 
 	// Assign wires
-	assign opcode = IR[31:26];
+	assign opcodeID = IFIDReg[IR][31:26];
+	assign opcodeEX = IDEXReg[IR][31:26];
+	assign opcodeMEM = EXMEMReg[IR][31:26];
+	assign opcodeWB = MEMWBReg[IR][31:26];
 	assign rs = IFIDReg[IR][25:21];
 	assign rtID = IFIDReg[IR][20:16];
 	assign rtWB = MEMWBReg[IR][20:16];
@@ -67,23 +70,23 @@ module CPU(clk);
 	parameter FUNC_SYSCALL = 6'b001100;
 
 	// stateA definitions
-	parameter IF 	= 0;
-	parameter ID	= 1;
-	parameter EX 	= 2;
-	parameter MEM 	= 3;
-	parameter WB 	= 4;
-
+	parameter IDLE 	= -1;
+	parameter IF 	=  0;
+	parameter ID	=  1;
+	parameter EX 	=  2;
+	parameter MEM 	=  3;
+	parameter WB 	=  4;
 
 	integer i;
 	initial begin 
 		PCReg = 0;
-		stateA = 0; stateB = 0; stateC = 0; stateD = 0; stateE = 0; 
+		stateA = IF; stateB = IDLE; stateC = IDLE; stateD = IDLE; stateE = IDLE; 
 		for ( i=0; i<32; i = i+1 ) begin
       		Regfile[i] = 0000_0000_0000_0000_0000_0000_0000_0000;
    		end
    		Memory[1021] = 'h00000001;
    		Memory[1022] = 'h00000002;
-		$readmemb("instructions.dat", Memory);
+		$readmemb("test_no_hazard.dat", Memory);
 	end
 
 	always @(posedge clk) begin
@@ -93,41 +96,46 @@ module CPU(clk);
 				IFIDReg[IR] <= Memory[PCReg];
 				PCReg <= PCReg + 1;
 				IFIDReg[PC] <= PCReg + 1;
-				stateA = ID;
+				stateA <= ID;
+				stateB <= IF;
 			end
 			
 			ID: begin
 				IDEXReg[A] <= Regfile[rs];
 				IDEXReg[B] <= Regfile[rtID];
-				if(opcode == OP_BNE) begin
+				IDEXReg[IR] <= IFIDReg[IR];
+				IDEXReg[PC] <= IFIDReg[PC];
+				if(opcodeID == OP_BNE) begin
 					IDEXReg[ID_ALUResult] <= PCReg + immediateID;
 				end
-				else if (opcode == OP_J) begin
+				else if (opcodeID == OP_J) begin
 					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				
-				else if (opcode == OP_R_TYPE || opcode == OP_XORI || opcode == OP_LW || opcode == OP_SW) begin
+				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
 					if (func == FUNC_SYSCALL) stateA = -1;
 				end
 
-				stateA = EX;
+				stateA <= EX;
 
 			end
 
 			EX: begin
-				if(opcode == OP_LW || opcode == OP_SW) begin
+				EXMEMReg[IR] <= IDEXReg[IR];
+				EXMEMReg[PC] <= IDEXReg[PC];
+				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 					EXMEMReg[EX_ALUResult] = IDEXReg[A] + immediateEX;
 				end
-				else if (opcode == OP_JAL) begin
+				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
-				else if (opcode == OP_BNE) begin
+				else if (opcodeEX == OP_BNE) begin
 					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
 				end
-				else if (opcode == OP_XORI) begin
+				else if (opcodeEX == OP_XORI) begin
 					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
 				end
-				else if (opcode == OP_R_TYPE) begin
+				else if (opcodeEX == OP_R_TYPE) begin
 					if (func == FUNC_JR) begin
 						PCReg <= IDEXReg[A];
 					end
@@ -142,42 +150,427 @@ module CPU(clk);
 					end
 				end
 				
-				stateA = MEM;
+				stateA <= MEM;
 
 			end
 
 			MEM: begin
-				if(opcode == OP_LW) begin
+				MEMWBReg[IR] <= EXMEMReg[IR];
+				MEMWBReg[PC] <= EXMEMReg[PC];
+				if(opcodeMEM == OP_LW) begin
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
 				end
-				else if(opcode == OP_SW) begin
+				else if(opcodeMEM == OP_SW) begin
 					Memory[EXMEMReg[EX_ALUResult]] = EXMEMReg[B];
 				end
 			
-				stateA = WB;
+				stateA <= WB;
 			
 			end
 
 			WB: begin
-				if (opcode == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
+				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
 				
-				else if(opcode == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
 				
-				else if(opcode == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
 				
-				else if (opcode == OP_LI) begin
+				else if (opcodeWB == OP_LI) begin
 					Regfile[rtWB] <= immediateWB;
 				end
 
-				else if (opcode == OP_JAL) begin
+				else if (opcodeWB == OP_JAL) begin
 					// Store PC in $ra
 					Regfile[31]<= EXMEMReg[PC];
 				end
-				stateA = IF;
+			end
+		endcase
+
+		// Second Instruction (StateB)
+		case (stateB)
+			IF: begin
+				IFIDReg[IR] <= Memory[PCReg];
+				PCReg <= PCReg + 1;
+				IFIDReg[PC] <= PCReg + 1;
+				stateB <= ID;
+				stateC <= IF;
+			end
+			
+			ID: begin
+				IDEXReg[A] <= Regfile[rs];
+				IDEXReg[B] <= Regfile[rtID];
+				IDEXReg[IR] <= IFIDReg[IR];
+				IDEXReg[PC] <= IFIDReg[PC];
+				if(opcodeID == OP_BNE) begin
+					IDEXReg[ID_ALUResult] <= PCReg + immediateID;
+				end
+				else if (opcodeID == OP_J) begin
+					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				
+				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
+					if (func == FUNC_SYSCALL) stateB = -1;
+				end
+
+				stateB <= EX;
+
 			end
 
+			EX: begin
+				EXMEMReg[IR] <= IDEXReg[IR];
+				EXMEMReg[PC] <= IDEXReg[PC];
+				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
+					EXMEMReg[EX_ALUResult] = IDEXReg[A] + immediateEX;
+				end
+				else if (opcodeEX == OP_JAL) begin
+					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				else if (opcodeEX == OP_BNE) begin
+					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+				end
+				else if (opcodeEX == OP_XORI) begin
+					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+				end
+				else if (opcodeEX == OP_R_TYPE) begin
+					if (func == FUNC_JR) begin
+						PCReg <= IDEXReg[A];
+					end
+					else if (func == FUNC_ADD) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+					end
+					else if (func == FUNC_SUB) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+					end
+					else if (func == FUNC_SLT) begin
+						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+					end
+				end
+				
+				stateB <= MEM;
+
+			end
+
+			MEM: begin
+				MEMWBReg[IR] <= EXMEMReg[IR];
+				MEMWBReg[PC] <= EXMEMReg[PC];
+				if(opcodeMEM == OP_LW) begin
+					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
+				end
+				else if(opcodeMEM == OP_SW) begin
+					Memory[EXMEMReg[EX_ALUResult]] = EXMEMReg[B];
+				end
+			
+				stateB <= WB;
+			
+			end
+
+			WB: begin
+				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
+				
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				
+				else if (opcodeWB == OP_LI) begin
+					Regfile[rtWB] <= immediateWB;
+				end
+
+				else if (opcodeWB == OP_JAL) begin
+					// Store PC in $ra
+					Regfile[31]<= EXMEMReg[PC];
+				end
+			end
+		endcase
+
+		// Third Instruction (StateC)
+		case (stateC)
+			IF: begin
+				IFIDReg[IR] <= Memory[PCReg];
+				PCReg <= PCReg + 1;
+				IFIDReg[PC] <= PCReg + 1;
+				stateC <= ID;
+				stateD <= IF;
+			end
+			
+			ID: begin
+				IDEXReg[A] <= Regfile[rs];
+				IDEXReg[B] <= Regfile[rtID];
+				IDEXReg[IR] <= IFIDReg[IR];
+				IDEXReg[PC] <= IFIDReg[PC];
+				if(opcodeID == OP_BNE) begin
+					IDEXReg[ID_ALUResult] <= PCReg + immediateID;
+				end
+				else if (opcodeID == OP_J) begin
+					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				
+				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
+					if (func == FUNC_SYSCALL) stateC = -1;
+				end
+
+				stateC <= EX;
+
+			end
+
+			EX: begin
+				EXMEMReg[IR] <= IDEXReg[IR];
+				EXMEMReg[PC] <= IDEXReg[PC];
+				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
+					EXMEMReg[EX_ALUResult] = IDEXReg[A] + immediateEX;
+				end
+				else if (opcodeEX == OP_JAL) begin
+					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				else if (opcodeEX == OP_BNE) begin
+					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+				end
+				else if (opcodeEX == OP_XORI) begin
+					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+				end
+				else if (opcodeEX == OP_R_TYPE) begin
+					if (func == FUNC_JR) begin
+						PCReg <= IDEXReg[A];
+					end
+					else if (func == FUNC_ADD) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+					end
+					else if (func == FUNC_SUB) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+					end
+					else if (func == FUNC_SLT) begin
+						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+					end
+				end
+				
+				stateC <= MEM;
+
+			end
+
+			MEM: begin
+				MEMWBReg[IR] <= EXMEMReg[IR];
+				MEMWBReg[PC] <= EXMEMReg[PC];
+				if(opcodeMEM == OP_LW) begin
+					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
+				end
+				else if(opcodeMEM == OP_SW) begin
+					Memory[EXMEMReg[EX_ALUResult]] = EXMEMReg[B];
+				end
+			
+				stateC <= WB;
+			
+			end
+
+			WB: begin
+				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
+				
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				
+				else if (opcodeWB == OP_LI) begin
+					Regfile[rtWB] <= immediateWB;
+				end
+
+				else if (opcodeWB == OP_JAL) begin
+					// Store PC in $ra
+					Regfile[31]<= EXMEMReg[PC];
+				end
+			end
+		endcase
+
+		// Fourth Instruction (StateD)
+		case (stateD)
+			IF: begin
+				IFIDReg[IR] <= Memory[PCReg];
+				PCReg <= PCReg + 1;
+				IFIDReg[PC] <= PCReg + 1;
+				stateD <= ID;
+				stateE <= IF;
+			end
+			
+			ID: begin
+				IDEXReg[A] <= Regfile[rs];
+				IDEXReg[B] <= Regfile[rtID];
+				IDEXReg[IR] <= IFIDReg[IR];
+				IDEXReg[PC] <= IFIDReg[PC];
+				if(opcodeID == OP_BNE) begin
+					IDEXReg[ID_ALUResult] <= PCReg + immediateID;
+				end
+				else if (opcodeID == OP_J) begin
+					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				
+				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
+					if (func == FUNC_SYSCALL) stateD = -1;
+				end
+
+				stateD <= EX;
+
+			end
+
+			EX: begin
+				EXMEMReg[IR] <= IDEXReg[IR];
+				EXMEMReg[PC] <= IDEXReg[PC];
+				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
+					EXMEMReg[EX_ALUResult] = IDEXReg[A] + immediateEX;
+				end
+				else if (opcodeEX == OP_JAL) begin
+					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				else if (opcodeEX == OP_BNE) begin
+					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+				end
+				else if (opcodeEX == OP_XORI) begin
+					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+				end
+				else if (opcodeEX == OP_R_TYPE) begin
+					if (func == FUNC_JR) begin
+						PCReg <= IDEXReg[A];
+					end
+					else if (func == FUNC_ADD) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+					end
+					else if (func == FUNC_SUB) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+					end
+					else if (func == FUNC_SLT) begin
+						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+					end
+				end
+				
+				stateD <= MEM;
+
+			end
+
+			MEM: begin
+				MEMWBReg[IR] <= EXMEMReg[IR];
+				MEMWBReg[PC] <= EXMEMReg[PC];
+				if(opcodeMEM == OP_LW) begin
+					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
+				end
+				else if(opcodeMEM == OP_SW) begin
+					Memory[EXMEMReg[EX_ALUResult]] = EXMEMReg[B];
+				end
+			
+				stateD <= WB;
+			
+			end
+
+			WB: begin
+				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
+				
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				
+				else if (opcodeWB == OP_LI) begin
+					Regfile[rtWB] <= immediateWB;
+				end
+
+				else if (opcodeWB == OP_JAL) begin
+					// Store PC in $ra
+					Regfile[31]<= EXMEMReg[PC];
+				end
+			end
+		endcase
+
+		// Fifth Instruction (StateE)
+		case (stateE)
+			IF: begin
+				IFIDReg[IR] <= Memory[PCReg];
+				PCReg <= PCReg + 1;
+				IFIDReg[PC] <= PCReg + 1;
+				stateE <= ID;
+				stateA <= IF;
+			end
+			
+			ID: begin
+				IDEXReg[A] <= Regfile[rs];
+				IDEXReg[B] <= Regfile[rtID];
+				IDEXReg[IR] <= IFIDReg[IR];
+				IDEXReg[PC] <= IFIDReg[PC];
+				if(opcodeID == OP_BNE) begin
+					IDEXReg[ID_ALUResult] <= PCReg + immediateID;
+				end
+				else if (opcodeID == OP_J) begin
+					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				
+				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
+					if (func == FUNC_SYSCALL) stateE = -1;
+				end
+
+				stateE <= EX;
+
+			end
+
+			EX: begin
+				EXMEMReg[IR] <= IDEXReg[IR];
+				EXMEMReg[PC] <= IDEXReg[PC];
+				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
+					EXMEMReg[EX_ALUResult] = IDEXReg[A] + immediateEX;
+				end
+				else if (opcodeEX == OP_JAL) begin
+					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				end
+				else if (opcodeEX == OP_BNE) begin
+					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+				end
+				else if (opcodeEX == OP_XORI) begin
+					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+				end
+				else if (opcodeEX == OP_R_TYPE) begin
+					if (func == FUNC_JR) begin
+						PCReg <= IDEXReg[A];
+					end
+					else if (func == FUNC_ADD) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+					end
+					else if (func == FUNC_SUB) begin
+						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+					end
+					else if (func == FUNC_SLT) begin
+						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+					end
+				end
+				
+				stateE <= MEM;
+
+			end
+
+			MEM: begin
+				MEMWBReg[IR] <= EXMEMReg[IR];
+				MEMWBReg[PC] <= EXMEMReg[PC];
+				if(opcodeMEM == OP_LW) begin
+					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
+				end
+				else if(opcodeMEM == OP_SW) begin
+					Memory[EXMEMReg[EX_ALUResult]] = EXMEMReg[B];
+				end
+			
+				stateE <= WB;
+			
+			end
+
+			WB: begin
+				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
+				
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				
+				else if (opcodeWB == OP_LI) begin
+					Regfile[rtWB] <= immediateWB;
+				end
+
+				else if (opcodeWB == OP_JAL) begin
+					// Store PC in $ra
+					Regfile[31]<= EXMEMReg[PC];
+				end
+			end
+		endcase
 		
-	endcase
+	
 	end
 
 	initial
@@ -198,7 +591,7 @@ module PIPELINED_CPU_TESTBENCH();
   end
 
 
-  CPU MY_CPU( clk );
+  PIPELINED_CPU MY_CPU( clk );
 
   
 endmodule
