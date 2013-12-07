@@ -29,6 +29,7 @@ module PIPELINED_CPU(clk);
 	wire [4:0] rs, rtID, rtWB, rd, sa;
 	wire [31:0] immediateID, immediateEX, immediateWB;
 	wire [25:0] target;
+	wire [31:0] inputA, inputB;
 
 	// R-type instructions (ADD, SUB, SLT, JR)
 	// opcode(6), rs(5), rt(5), rd(5), sa(5), func(6)
@@ -87,6 +88,18 @@ module PIPELINED_CPU(clk);
 	parameter MEM 	=  3;
 	parameter WB 	=  4;
 
+	assign inputA = 
+		((IDEXReg[IR][15:11] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? ForwardReg0[ALU_Result]:
+		((IDEXReg[IR][15:11] == ForwardReg1[dest_reg]) && ForwardReg1[write_en]) ? ForwardReg1[ALU_Result]:
+		((IDEXReg[IR][15:11] == ForwardReg2[dest_reg]) && ForwardReg2[write_en]) ? ForwardReg2[ALU_Result]:
+			IDEXReg[A];
+
+	assign inputB = 
+		((IDEXReg[IR][20:16] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? ForwardReg0[ALU_Result]:
+		((IDEXReg[IR][20:16] == ForwardReg1[dest_reg]) && ForwardReg1[write_en]) ? ForwardReg1[ALU_Result]:
+		((IDEXReg[IR][20:16] == ForwardReg2[dest_reg]) && ForwardReg2[write_en]) ? ForwardReg2[ALU_Result]:
+			IDEXReg[B];
+
 	integer i;
 	initial begin 
 		PCReg = 0;
@@ -134,29 +147,29 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[IR] <= IDEXReg[IR];
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A] + immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA + immediateEX;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				else if (opcodeEX == OP_BNE) begin
-					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+					if (inputA != inputB) PCReg <= EXMEMReg[ID_ALUResult];
 				end
 				else if (opcodeEX == OP_XORI) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
 					if (funcEX == FUNC_JR) begin
-						PCReg <= IDEXReg[A];
+						PCReg <= inputA;
 					end
 					else if (funcEX == FUNC_ADD) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA + inputB;
 					end
 					else if (funcEX == FUNC_SUB) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA - inputB;
 					end
 					else if (funcEX == FUNC_SLT) begin
-						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+						EXMEMReg[EX_ALUResult] <= (inputA < inputB) ? 1 : 0;
 					end
 				end
 				
@@ -232,29 +245,29 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[IR] <= IDEXReg[IR];
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A] + immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA + immediateEX;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				else if (opcodeEX == OP_BNE) begin
-					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+					if (inputA != inputB) PCReg <= EXMEMReg[ID_ALUResult];
 				end
 				else if (opcodeEX == OP_XORI) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
 					if (funcEX == FUNC_JR) begin
-						PCReg <= IDEXReg[A];
+						PCReg <= inputA;
 					end
 					else if (funcEX == FUNC_ADD) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA + inputB;
 					end
 					else if (funcEX == FUNC_SUB) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA - inputB;
 					end
 					else if (funcEX == FUNC_SLT) begin
-						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+						EXMEMReg[EX_ALUResult] <= (inputA < inputB) ? 1 : 0;
 					end
 				end
 				
@@ -329,29 +342,29 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[IR] <= IDEXReg[IR];
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A] + immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA + immediateEX;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				else if (opcodeEX == OP_BNE) begin
-					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+					if (inputA != inputB) PCReg <= EXMEMReg[ID_ALUResult];
 				end
 				else if (opcodeEX == OP_XORI) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
 					if (funcEX == FUNC_JR) begin
-						PCReg <= IDEXReg[A];
+						PCReg <= inputA;
 					end
 					else if (funcEX == FUNC_ADD) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA + inputB;
 					end
 					else if (funcEX == FUNC_SUB) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA - inputB;
 					end
 					else if (funcEX == FUNC_SLT) begin
-						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+						EXMEMReg[EX_ALUResult] <= (inputA < inputB) ? 1 : 0;
 					end
 				end
 				
@@ -426,29 +439,29 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[IR] <= IDEXReg[IR];
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A] + immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA + immediateEX;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				else if (opcodeEX == OP_BNE) begin
-					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+					if (inputA != inputB) PCReg <= EXMEMReg[ID_ALUResult];
 				end
 				else if (opcodeEX == OP_XORI) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
 					if (funcEX == FUNC_JR) begin
-						PCReg <= IDEXReg[A];
+						PCReg <= inputA;
 					end
 					else if (funcEX == FUNC_ADD) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA + inputB;
 					end
 					else if (funcEX == FUNC_SUB) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA - inputB;
 					end
 					else if (funcEX == FUNC_SLT) begin
-						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+						EXMEMReg[EX_ALUResult] <= (inputA < inputB) ? 1 : 0;
 					end
 				end
 				
@@ -523,29 +536,29 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[IR] <= IDEXReg[IR];
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A] + immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA + immediateEX;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 				end
 				else if (opcodeEX == OP_BNE) begin
-					if (IDEXReg[A] != IDEXReg[B]) PCReg <= EXMEMReg[ID_ALUResult];
+					if (inputA != inputB) PCReg <= EXMEMReg[ID_ALUResult];
 				end
 				else if (opcodeEX == OP_XORI) begin
-					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
+					EXMEMReg[EX_ALUResult] <= inputA^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
 					if (funcEX == FUNC_JR) begin
-						PCReg <= IDEXReg[A];
+						PCReg <= inputA;
 					end
 					else if (funcEX == FUNC_ADD) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA + inputB;
 					end
 					else if (funcEX == FUNC_SUB) begin
-						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
+						EXMEMReg[EX_ALUResult] <= inputA - inputB;
 					end
 					else if (funcEX == FUNC_SLT) begin
-						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
+						EXMEMReg[EX_ALUResult] <= (inputA < inputB) ? 1 : 0;
 					end
 				end
 				
@@ -593,6 +606,9 @@ module PIPELINED_CPU(clk);
 		else if (opcodeWB == OP_XORI) begin
 			ForwardReg0[write_en] <= 1;
 			ForwardReg0[dest_reg] <= IDEXReg[IR][20:16];
+		end
+		else begin
+			ForwardReg0[write_en] <= 0;
 		end
 
 		ForwardReg1[ALU_Result] <= EXMEMReg[EX_ALUResult];
