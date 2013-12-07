@@ -599,7 +599,9 @@ module PIPELINED_CPU(clk);
 		ForwardReg1[write_en] <= ForwardReg0[write_en];
 		ForwardReg1[dest_reg] <= ForwardReg0[dest_reg];
 		
-		ForwardReg2 <= ForwardReg1;	
+		ForwardReg2[ALU_Result] <= ForwardReg1[ALU_Result];	
+		ForwardReg2[write_en] <= ForwardReg1[write_en];
+		ForwardReg2[dest_reg] <= ForwardReg1[dest_reg];
 
 	end
 
