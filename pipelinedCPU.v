@@ -20,7 +20,7 @@ module PIPELINED_CPU(clk);
 	reg [31:0] IFIDReg [0:7], IDEXReg [0:7], EXMEMReg [0:7], MEMWBReg [0:7]; 
 
 	// Wires
-	wire [5:0] opcode, func;
+	wire [5:0] opcodeID, opcodeEX, opcodeMEM, opcodeWB, funcID, funcEX;
 	wire [4:0] rs, rtID, rtWB, rd, sa;
 	wire [31:0] immediateID, immediateEX, immediateWB;
 	wire [25:0] target;
@@ -41,16 +41,21 @@ module PIPELINED_CPU(clk);
 	assign opcodeEX = IDEXReg[IR][31:26];
 	assign opcodeMEM = EXMEMReg[IR][31:26];
 	assign opcodeWB = MEMWBReg[IR][31:26];
+
+	assign funcID = IFIDReg[IR][5:0];
+	assign funcEX = IDEXReg[IR][5:0];
+
 	assign rs = IFIDReg[IR][25:21];
 	assign rtID = IFIDReg[IR][20:16];
 	assign rtWB = MEMWBReg[IR][20:16];
 	assign rd = MEMWBReg[IR][15:11];
-	assign sa = IR[10:6];
-	assign func = IR[5:0];
+	
 	assign immediateID = {{16{IFIDReg[IR][15]}}, IFIDReg[IR][15:0]};
 	assign immediateEX = {{16{IDEXReg[IR][15]}}, IDEXReg[IR][15:0]};
 	assign immediateWB = {{16{MEMWBReg[IR][15]}}, MEMWBReg[IR][15:0]};
-	assign target = IR[25:0];
+
+	//assign sa = IR[10:6];
+	//assign target = IR[25:0];
 
 	// opcodes
 	parameter OP_LI   = 6'b001001;
@@ -113,7 +118,7 @@ module PIPELINED_CPU(clk);
 				end
 				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (func == FUNC_SYSCALL) stateA = -1;
+					if (funcID == FUNC_SYSCALL) stateA = -1;
 				end
 
 				stateA <= EX;
@@ -136,16 +141,16 @@ module PIPELINED_CPU(clk);
 					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
-					if (func == FUNC_JR) begin
+					if (funcEX == FUNC_JR) begin
 						PCReg <= IDEXReg[A];
 					end
-					else if (func == FUNC_ADD) begin
+					else if (funcEX == FUNC_ADD) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
 					end
-					else if (func == FUNC_SUB) begin
+					else if (funcEX == FUNC_SUB) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
 					end
-					else if (func == FUNC_SLT) begin
+					else if (funcEX == FUNC_SLT) begin
 						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
 					end
 				end
@@ -209,7 +214,7 @@ module PIPELINED_CPU(clk);
 				end
 				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (func == FUNC_SYSCALL) stateB = -1;
+					if (funcID == FUNC_SYSCALL) stateB = -1;
 				end
 
 				stateB <= EX;
@@ -232,16 +237,16 @@ module PIPELINED_CPU(clk);
 					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
-					if (func == FUNC_JR) begin
+					if (funcEX == FUNC_JR) begin
 						PCReg <= IDEXReg[A];
 					end
-					else if (func == FUNC_ADD) begin
+					else if (funcEX == FUNC_ADD) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
 					end
-					else if (func == FUNC_SUB) begin
+					else if (funcEX == FUNC_SUB) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
 					end
-					else if (func == FUNC_SLT) begin
+					else if (funcEX == FUNC_SLT) begin
 						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
 					end
 				end
@@ -305,7 +310,7 @@ module PIPELINED_CPU(clk);
 				end
 				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (func == FUNC_SYSCALL) stateC = -1;
+					if (funcID == FUNC_SYSCALL) stateC = -1;
 				end
 
 				stateC <= EX;
@@ -328,16 +333,16 @@ module PIPELINED_CPU(clk);
 					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
-					if (func == FUNC_JR) begin
+					if (funcEX == FUNC_JR) begin
 						PCReg <= IDEXReg[A];
 					end
-					else if (func == FUNC_ADD) begin
+					else if (funcEX == FUNC_ADD) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
 					end
-					else if (func == FUNC_SUB) begin
+					else if (funcEX == FUNC_SUB) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
 					end
-					else if (func == FUNC_SLT) begin
+					else if (funcEX == FUNC_SLT) begin
 						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
 					end
 				end
@@ -401,7 +406,7 @@ module PIPELINED_CPU(clk);
 				end
 				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (func == FUNC_SYSCALL) stateD = -1;
+					if (funcID == FUNC_SYSCALL) stateD = -1;
 				end
 
 				stateD <= EX;
@@ -424,16 +429,16 @@ module PIPELINED_CPU(clk);
 					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
-					if (func == FUNC_JR) begin
+					if (funcEX == FUNC_JR) begin
 						PCReg <= IDEXReg[A];
 					end
-					else if (func == FUNC_ADD) begin
+					else if (funcEX == FUNC_ADD) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
 					end
-					else if (func == FUNC_SUB) begin
+					else if (funcEX == FUNC_SUB) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
 					end
-					else if (func == FUNC_SLT) begin
+					else if (funcEX == FUNC_SLT) begin
 						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
 					end
 				end
@@ -497,7 +502,7 @@ module PIPELINED_CPU(clk);
 				end
 				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (func == FUNC_SYSCALL) stateE = -1;
+					if (funcID == FUNC_SYSCALL) stateE = -1;
 				end
 
 				stateE <= EX;
@@ -520,16 +525,16 @@ module PIPELINED_CPU(clk);
 					EXMEMReg[EX_ALUResult] <= IDEXReg[A]^immediateEX;
 				end
 				else if (opcodeEX == OP_R_TYPE) begin
-					if (func == FUNC_JR) begin
+					if (funcEX == FUNC_JR) begin
 						PCReg <= IDEXReg[A];
 					end
-					else if (func == FUNC_ADD) begin
+					else if (funcEX == FUNC_ADD) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] + IDEXReg[B];
 					end
-					else if (func == FUNC_SUB) begin
+					else if (funcEX == FUNC_SUB) begin
 						EXMEMReg[EX_ALUResult] <= IDEXReg[A] - IDEXReg[B];
 					end
-					else if (func == FUNC_SLT) begin
+					else if (funcEX == FUNC_SLT) begin
 						EXMEMReg[EX_ALUResult] <= (IDEXReg[A] < IDEXReg[B]) ? 1 : 0;
 					end
 				end
