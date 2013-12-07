@@ -162,6 +162,7 @@ module PIPELINED_CPU(clk);
 			MEM: begin
 				MEMWBReg[IR] <= EXMEMReg[IR];
 				MEMWBReg[PC] <= EXMEMReg[PC];
+				MEMWBReg[EX_ALUResult] <= EXMEMReg[EX_ALUResult];
 				if(opcodeMEM == OP_LW) begin
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
 				end
@@ -176,9 +177,9 @@ module PIPELINED_CPU(clk);
 			WB: begin
 				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
 				
-				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= MEMWBReg[EX_ALUResult];
 				
-				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= MEMWBReg[EX_ALUResult];
 				
 				else if (opcodeWB == OP_LI) begin
 					Regfile[rtWB] <= immediateWB;
@@ -186,7 +187,7 @@ module PIPELINED_CPU(clk);
 
 				else if (opcodeWB == OP_JAL) begin
 					// Store PC in $ra
-					Regfile[31]<= EXMEMReg[PC];
+					Regfile[31]<= MEMWBReg[PC];
 				end
 			end
 		endcase
@@ -258,6 +259,7 @@ module PIPELINED_CPU(clk);
 			MEM: begin
 				MEMWBReg[IR] <= EXMEMReg[IR];
 				MEMWBReg[PC] <= EXMEMReg[PC];
+				MEMWBReg[EX_ALUResult] <= EXMEMReg[EX_ALUResult];
 				if(opcodeMEM == OP_LW) begin
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
 				end
@@ -272,9 +274,9 @@ module PIPELINED_CPU(clk);
 			WB: begin
 				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
 				
-				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= MEMWBReg[EX_ALUResult];
 				
-				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= MEMWBReg[EX_ALUResult];
 				
 				else if (opcodeWB == OP_LI) begin
 					Regfile[rtWB] <= immediateWB;
@@ -282,7 +284,7 @@ module PIPELINED_CPU(clk);
 
 				else if (opcodeWB == OP_JAL) begin
 					// Store PC in $ra
-					Regfile[31]<= EXMEMReg[PC];
+					Regfile[31]<= MEMWBReg[PC];
 				end
 			end
 		endcase
@@ -354,6 +356,7 @@ module PIPELINED_CPU(clk);
 			MEM: begin
 				MEMWBReg[IR] <= EXMEMReg[IR];
 				MEMWBReg[PC] <= EXMEMReg[PC];
+				MEMWBReg[EX_ALUResult] <= EXMEMReg[EX_ALUResult];
 				if(opcodeMEM == OP_LW) begin
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
 				end
@@ -368,9 +371,9 @@ module PIPELINED_CPU(clk);
 			WB: begin
 				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
 				
-				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= MEMWBReg[EX_ALUResult];
 				
-				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= MEMWBReg[EX_ALUResult];
 				
 				else if (opcodeWB == OP_LI) begin
 					Regfile[rtWB] <= immediateWB;
@@ -378,7 +381,7 @@ module PIPELINED_CPU(clk);
 
 				else if (opcodeWB == OP_JAL) begin
 					// Store PC in $ra
-					Regfile[31]<= EXMEMReg[PC];
+					Regfile[31]<= MEMWBReg[PC];
 				end
 			end
 		endcase
@@ -450,6 +453,7 @@ module PIPELINED_CPU(clk);
 			MEM: begin
 				MEMWBReg[IR] <= EXMEMReg[IR];
 				MEMWBReg[PC] <= EXMEMReg[PC];
+				MEMWBReg[EX_ALUResult] <= EXMEMReg[EX_ALUResult];
 				if(opcodeMEM == OP_LW) begin
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
 				end
@@ -464,9 +468,9 @@ module PIPELINED_CPU(clk);
 			WB: begin
 				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
 				
-				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= MEMWBReg[EX_ALUResult];
 				
-				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= MEMWBReg[EX_ALUResult];
 				
 				else if (opcodeWB == OP_LI) begin
 					Regfile[rtWB] <= immediateWB;
@@ -474,7 +478,7 @@ module PIPELINED_CPU(clk);
 
 				else if (opcodeWB == OP_JAL) begin
 					// Store PC in $ra
-					Regfile[31]<= EXMEMReg[PC];
+					Regfile[31]<= MEMWBReg[PC];
 				end
 			end
 		endcase
@@ -546,6 +550,7 @@ module PIPELINED_CPU(clk);
 			MEM: begin
 				MEMWBReg[IR] <= EXMEMReg[IR];
 				MEMWBReg[PC] <= EXMEMReg[PC];
+				MEMWBReg[EX_ALUResult] <= EXMEMReg[EX_ALUResult];
 				if(opcodeMEM == OP_LW) begin
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALUResult]];
 				end
@@ -560,9 +565,9 @@ module PIPELINED_CPU(clk);
 			WB: begin
 				if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
 				
-				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_XORI) Regfile[rtWB] <= MEMWBReg[EX_ALUResult];
 				
-				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= EXMEMReg[EX_ALUResult];
+				else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= MEMWBReg[EX_ALUResult];
 				
 				else if (opcodeWB == OP_LI) begin
 					Regfile[rtWB] <= immediateWB;
@@ -570,7 +575,7 @@ module PIPELINED_CPU(clk);
 
 				else if (opcodeWB == OP_JAL) begin
 					// Store PC in $ra
-					Regfile[31]<= EXMEMReg[PC];
+					Regfile[31]<= MEMWBReg[PC];
 				end
 			end
 		endcase
