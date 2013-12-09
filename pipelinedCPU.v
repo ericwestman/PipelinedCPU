@@ -89,13 +89,13 @@ module PIPELINED_CPU(clk);
 	parameter WB 	=  4;
 
 	assign inputA = 
-		((IDEXReg[IR][15:11] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? ForwardReg0[ALU_Result]:
+		((IDEXReg[IR][15:11] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? EXMEMReg[EX_ALUResult]:
 		((IDEXReg[IR][15:11] == ForwardReg1[dest_reg]) && ForwardReg1[write_en]) ? ForwardReg1[ALU_Result]:
 		((IDEXReg[IR][15:11] == ForwardReg2[dest_reg]) && ForwardReg2[write_en]) ? ForwardReg2[ALU_Result]:
 			IDEXReg[A];
 
 	assign inputB = 
-		((IDEXReg[IR][20:16] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? ForwardReg0[ALU_Result]:
+		((IDEXReg[IR][20:16] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? EXMEMReg[EX_ALUResult]:
 		((IDEXReg[IR][20:16] == ForwardReg1[dest_reg]) && ForwardReg1[write_en]) ? ForwardReg1[ALU_Result]:
 		((IDEXReg[IR][20:16] == ForwardReg2[dest_reg]) && ForwardReg2[write_en]) ? ForwardReg2[ALU_Result]:
 			IDEXReg[B];
@@ -109,7 +109,10 @@ module PIPELINED_CPU(clk);
    		end
    		Memory[1021] = 'h00000001;
    		Memory[1022] = 'h00000002;
-		$readmemb("test_no_hazard.dat", Memory);
+   		ForwardReg0[0] = 'h00000000;
+   		ForwardReg0[1] = 'h00000000;
+   		ForwardReg0[2] = 'h00000000;
+		$readmemb("datahazard.dat", Memory);
 	end
 
 	always @(posedge clk) begin
