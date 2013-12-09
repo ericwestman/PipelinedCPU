@@ -3,3 +3,4 @@
 *.wlf
 *.mti
 work/
+*.mpf_lock

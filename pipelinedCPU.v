@@ -107,12 +107,16 @@ module PIPELINED_CPU(clk);
 		for ( i=0; i<32; i = i+1 ) begin
       		Regfile[i] = 0000_0000_0000_0000_0000_0000_0000_0000;
    		end
+   		
    		Memory[1021] = 'h00000001;
    		Memory[1022] = 'h00000002;
+
    		ForwardReg0[0] = 'h00000000;
    		ForwardReg0[1] = 'h00000000;
    		ForwardReg0[2] = 'h00000000;
+   		
 		$readmemb("datahazard.dat", Memory);
+
 	end
 
 	always @(posedge clk) begin
