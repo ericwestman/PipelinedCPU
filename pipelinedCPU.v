@@ -89,9 +89,9 @@ module PIPELINED_CPU(clk);
 	parameter WB 	=  4;
 
 	assign inputA = 
-		((IDEXReg[IR][15:11] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? EXMEMReg[EX_ALUResult]:
-		((IDEXReg[IR][15:11] == ForwardReg1[dest_reg]) && ForwardReg1[write_en]) ? ForwardReg1[ALU_Result]:
-		((IDEXReg[IR][15:11] == ForwardReg2[dest_reg]) && ForwardReg2[write_en]) ? ForwardReg2[ALU_Result]:
+		((IDEXReg[IR][25:21] == ForwardReg0[dest_reg]) && ForwardReg0[write_en]) ? EXMEMReg[EX_ALUResult]:
+		((IDEXReg[IR][25:21] == ForwardReg1[dest_reg]) && ForwardReg1[write_en]) ? ForwardReg1[ALU_Result]:
+		((IDEXReg[IR][25:21] == ForwardReg2[dest_reg]) && ForwardReg2[write_en]) ? ForwardReg2[ALU_Result]:
 			IDEXReg[A];
 
 	assign inputB = 
@@ -114,7 +114,7 @@ module PIPELINED_CPU(clk);
    		ForwardReg0[0] = 'h00000000;
    		ForwardReg0[1] = 'h00000000;
    		ForwardReg0[2] = 'h00000000;
-   		
+
 		$readmemb("datahazard.dat", Memory);
 
 	end
