@@ -126,6 +126,14 @@ module PIPELINED_CPU(clk);
    		ForwardReg0[1] = 'h00000000;
    		ForwardReg0[2] = 'h00000000;
 
+   		ForwardReg1[0] = 'h00000000;
+   		ForwardReg1[1] = 'h00000000;
+   		ForwardReg1[2] = 'h00000000;
+
+   		ForwardReg2[0] = 'h00000000;
+   		ForwardReg2[1] = 'h00000000;
+   		ForwardReg2[2] = 'h00000000;
+
 		$readmemb("load_word_test.dat", Memory);
 
 	end
@@ -203,7 +211,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
 				end
 			
 				stateA <= WB;
@@ -301,7 +309,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
 				end
 			
 				stateB <= WB;
@@ -398,7 +406,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
 				end
 			
 				stateC <= WB;
@@ -495,7 +503,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
 				end
 			
 				stateD <= WB;
@@ -592,7 +600,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
 				end
 			
 				stateE <= WB;
