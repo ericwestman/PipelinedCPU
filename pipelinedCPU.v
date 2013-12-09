@@ -621,11 +621,11 @@ module PIPELINED_CPU(clk);
 			ForwardReg0[write_val] <= write_ALU_result;
 			ForwardReg0[dest_reg] <= IDEXReg[IR][15:11];
 		end
-		else if (opcodeWB == OP_XORI) begin
+		else if (opcodeEX == OP_XORI) begin
 			ForwardReg0[write_val] <= write_ALU_result;
 			ForwardReg0[dest_reg] <= IDEXReg[IR][20:16];
 		end
-		else if (opcodeWB == OP_LW) begin
+		else if (opcodeEX == OP_LW) begin
 			ForwardReg0[write_val] <= write_MEM;
 			ForwardReg0[dest_reg] <= IDEXReg[IR][20:16];
 		end
