@@ -18,13 +18,13 @@ module PIPELINED_CPU(clk);
 	parameter MDR			= 6;
 
 	// Parameters for the registers that help with forwarding
-	parameter ALU_RESULT 	= 0;
+	parameter FORWARD_DATA 	= 0;
 	parameter WRITE_VAL		= 1;
 	parameter DEST_REG		= 2;
 
 	// WRITE_VAL represents
 	parameter NO_WRITE 			= 0;
-	parameter WRITE_ALU_RESULT 	= 1;
+	parameter WRITE_FORWARD_DATA 	= 1;
 	parameter WRITE_MEM			= 2;
 
 	reg [31:0] IFIDReg [0:7], IDEXReg [0:7], EXMEMReg [0:7], MEMWBReg [0:7]; 
@@ -94,21 +94,21 @@ module PIPELINED_CPU(clk);
 	parameter WB 	=  4;
 
 	assign inputA = 
-		((IDEXReg[IR][25:21] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_ALU_RESULT) ? EXMEMReg[EX_ALU_RESULT]:
-		((IDEXReg[IR][25:21] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_MEM) ? Memory[EXMEMReg[EX_ALU_RESULT]]:
-		((IDEXReg[IR][25:21] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_ALU_RESULT) ? ForwardReg1[ALU_RESULT]:
-		((IDEXReg[IR][25:21] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg1[ALU_RESULT]]:
-		((IDEXReg[IR][25:21] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_ALU_RESULT) ? ForwardReg2[ALU_RESULT]:
-		((IDEXReg[IR][25:21] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg2[ALU_RESULT]]:
+		((IDEXReg[IR][25:21] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg0[FORWARD_DATA]:
+		((IDEXReg[IR][25:21] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg0[FORWARD_DATA]]:
+		((IDEXReg[IR][25:21] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg1[FORWARD_DATA]:
+		((IDEXReg[IR][25:21] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg1[FORWARD_DATA]]:
+		((IDEXReg[IR][25:21] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg2[FORWARD_DATA]:
+		((IDEXReg[IR][25:21] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg2[FORWARD_DATA]]:
 			IDEXReg[A];
 
 	assign inputB = 
-		((IDEXReg[IR][20:16] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_ALU_RESULT) ? EXMEMReg[EX_ALU_RESULT]:
-		((IDEXReg[IR][20:16] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_MEM) ? Memory[EXMEMReg[EX_ALU_RESULT]]:
-		((IDEXReg[IR][20:16] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_ALU_RESULT) ? ForwardReg1[ALU_RESULT]:
-		((IDEXReg[IR][20:16] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg1[ALU_RESULT]]:
-		((IDEXReg[IR][20:16] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_ALU_RESULT) ? ForwardReg2[ALU_RESULT]:
-		((IDEXReg[IR][20:16] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg2[ALU_RESULT]]:
+		((IDEXReg[IR][20:16] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg0[FORWARD_DATA]:
+		((IDEXReg[IR][20:16] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg0[FORWARD_DATA]]:
+		((IDEXReg[IR][20:16] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg1[FORWARD_DATA]:
+		((IDEXReg[IR][20:16] == ForwardReg1[DEST_REG]) && ForwardReg1[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg1[FORWARD_DATA]]:
+		((IDEXReg[IR][20:16] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg2[FORWARD_DATA]:
+		((IDEXReg[IR][20:16] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg2[FORWARD_DATA]]:
 			IDEXReg[B];
 
 	integer i;
@@ -174,6 +174,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 					EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
+					EXMEMReg[B] <= inputB;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
@@ -211,7 +212,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
 				end
 			
 				stateA <= WB;
@@ -272,6 +273,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 					EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
+					EXMEMReg[B] <= inputB;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
@@ -309,7 +311,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
 				end
 			
 				stateB <= WB;
@@ -369,6 +371,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 					EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
+					EXMEMReg[B] <= inputB;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
@@ -406,7 +409,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
 				end
 			
 				stateC <= WB;
@@ -466,6 +469,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 					EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
+					EXMEMReg[B] <= inputB;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
@@ -503,7 +507,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
 				end
 			
 				stateD <= WB;
@@ -563,6 +567,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[PC] <= IDEXReg[PC];
 				if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 					EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
+					EXMEMReg[B] <= inputB;
 				end
 				else if (opcodeEX == OP_JAL) begin
 					PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
@@ -600,7 +605,7 @@ module PIPELINED_CPU(clk);
 					MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 				end
 				else if(opcodeMEM == OP_SW) begin
-					Memory[EXMEMReg[EX_ALU_RESULT]] <= inputB;
+					Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
 				end
 			
 				stateE <= WB;
@@ -626,12 +631,27 @@ module PIPELINED_CPU(clk);
 		endcase
 
 		if (opcodeEX == OP_R_TYPE) begin 
-			ForwardReg0[WRITE_VAL] <= WRITE_ALU_RESULT;
+			ForwardReg0[WRITE_VAL] <= WRITE_FORWARD_DATA;
 			ForwardReg0[DEST_REG] <= IDEXReg[IR][15:11];
+			if (funcEX == FUNC_ADD) begin
+				ForwardReg0[FORWARD_DATA] <= inputA + inputB;
+			end
+			else if (funcEX == FUNC_SUB) begin
+				ForwardReg0[FORWARD_DATA] <= inputA - inputB;
+			end
+			else if (funcEX == FUNC_SLT) begin
+				ForwardReg0[FORWARD_DATA] <= (inputA < inputB) ? 1 : 0;
+			end
 		end
 		else if (opcodeEX == OP_XORI) begin
-			ForwardReg0[WRITE_VAL] <= WRITE_ALU_RESULT;
+			ForwardReg0[WRITE_VAL] <= WRITE_FORWARD_DATA;
 			ForwardReg0[DEST_REG] <= IDEXReg[IR][20:16];
+			ForwardReg0[FORWARD_DATA] <= inputA^immediateEX;
+		end
+		else if (opcodeEX == OP_LI) begin
+			ForwardReg0[WRITE_VAL] <= WRITE_FORWARD_DATA;
+			ForwardReg0[DEST_REG] <= IDEXReg[IR][20:16];
+			ForwardReg0[FORWARD_DATA] <= immediateEX;
 		end
 		else if (opcodeEX == OP_LW) begin
 			ForwardReg0[WRITE_VAL] <= WRITE_MEM;
@@ -639,13 +659,15 @@ module PIPELINED_CPU(clk);
 		end
 		else begin
 			ForwardReg0[WRITE_VAL] <= NO_WRITE;
+			ForwardReg0[DEST_REG] <= NO_WRITE;
+			ForwardReg0[FORWARD_DATA] <= NO_WRITE;
 		end
 
-		ForwardReg1[ALU_RESULT] <= EXMEMReg[EX_ALU_RESULT];
+		ForwardReg1[FORWARD_DATA] <= ForwardReg0[FORWARD_DATA];
 		ForwardReg1[WRITE_VAL] <= ForwardReg0[WRITE_VAL];
 		ForwardReg1[DEST_REG] <= ForwardReg0[DEST_REG];
 		
-		ForwardReg2[ALU_RESULT] <= ForwardReg1[ALU_RESULT];	
+		ForwardReg2[FORWARD_DATA] <= ForwardReg1[FORWARD_DATA];	
 		ForwardReg2[WRITE_VAL] <= ForwardReg1[WRITE_VAL];
 		ForwardReg2[DEST_REG] <= ForwardReg1[DEST_REG];
 
