@@ -5,25 +5,6 @@
 lw $t1, 1021
 lw $t2, 1022
 
-add $t3, $t1, $t2
-
-#li $t1, 1
-#li $t2, 2
-
-# wait to make sure lw $t1 is written
-li $a0, 1
-li $a0, 2
-li $a0, 3
-
-# Store the value of $t1 into memory
-#sw $t1, 1023
-
-# wait to make sure sw $t1 is written
-li $a0, 1
-li $a0, 2
-li $a0, 3
-li $a0, 4
-
 # xor the value stored in $t1 (1) with 99
 # expected output: 98
 xori $t3, $t1, 99
@@ -47,14 +28,17 @@ jumpelseif:
 	sub $t8, $t2, $t1
 jumpend:
 
+li $t1, 10
+li $t2, 9
+
 # A test of the difference function
 # difference(8, 4) = 4
-li $s0, 8	# first input
-li $s1, 4	# second input
-li $sp, 1020	# set the stack pointer to a specific location in memory
+#li $s0, 8	# first input
+#li $s1, 4	# second input
+#li $sp, 1020	# set the stack pointer to a specific location in memory
 #jal difference
-li $v0, 10
-syscall
+#li $v0, 10
+#syscall
 
 # FUNCTION: difference(a, b)
 # Returns (a - b)
@@ -66,30 +50,29 @@ syscall
 #       return 0
 #   else
 #       return 1 + difference(a - 1 , b)
-difference:
-bne $s0, $s1, end
-	# return 0
-	add $v1, $zero, $zero
-	jr $ra
-end:
-	# pushing to the stack
-	sub $sp, $sp, $t4
-	sw $ra, 2($sp)
-	sw $s1, 1($sp)
-	sw $s0 0($sp)
-	
-	# Argument prep (a - 1)
-	sub $s0, $s0, $t1
-	
-	# jal
-	jal difference
-	
-	# popping from the stack
-	lw $ra, 2($sp)
-	lw $s1, 1($sp)
-	lw $s0, 0($sp)
-	add $sp, $sp, $t4
-	
-	# return 1 + difference($t1 , $t2)
-	add $v1, $v1, $t1
-	jr $ra
+#difference:
+#bne $s0, $s1, end
+#	# return 0
+#	add $v1, $zero, $zero
+#	jr $ra
+#end:
+#	# pushing to the stack
+#	sub $sp, $sp, $t4
+#	sw $ra, 2($sp)
+#	sw $s1, 1($sp)
+#	sw $s0 0($sp)
+#	
+#	# Argument prep (a - 1)
+#	sub $s0, $s0, $t1
+#	
+#	# jal
+#	jal difference
+#	
+#	# popping from the stack
+#	lw $s1, 1($sp)
+#	lw $s0, 0($sp)
+#	add $sp, $sp, $t4
+#	
+#	# return 1 + difference($t1 , $t2)
+#	add $v1, $v1, $t1
+#	jr $ra
