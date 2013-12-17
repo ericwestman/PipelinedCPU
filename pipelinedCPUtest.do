@@ -25,12 +25,11 @@ add wave -noupdate {/MY_CPU/Regfile[13]}
 add wave -noupdate {/MY_CPU/Regfile[14]}
 add wave -noupdate {/MY_CPU/Regfile[15]}
 add wave -noupdate {/MY_CPU/Regfile[24]}
-add wave -noupdate {/MY_CPU/Memory[1017]}
-add wave -noupdate {/MY_CPU/Memory[1018]}
-add wave -noupdate {/MY_CPU/Memory[1019]}
-add wave -noupdate {/MY_CPU/Memory[1020]}
-add wave -noupdate {/MY_CPU/Memory[1021]}
-add wave -noupdate {/MY_CPU/Memory[1022]}
+add wave -noupdate {/MY_CPU/IFIDReg[JUMP_BRANCH]}
+add wave -noupdate {/MY_CPU/IDEXReg[JUMP_BRANCH]}
+add wave -noupdate {/MY_CPU/EXMEMReg[JUMP_BRANCH]}
+add wave -noupdate {/MY_CPU/MEMWBReg[JUMP_BRANCH]}
+
 
 # 6) Run for x ns
 run 500
