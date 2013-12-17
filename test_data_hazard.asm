@@ -26,6 +26,9 @@ slt $t6, $t1, $t5
 # then we'll jump to the end
 bne $t1, $t2, jumpelseif
 	add $t7, $t1, $t2
+	add $t8, $t2, $t1
+	add $s0, $t2, $t1
+	add $s1, $t2, $t1
 jumpelseif:
 add $t9, $t2, $t1
 

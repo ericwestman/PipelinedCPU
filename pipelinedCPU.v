@@ -192,7 +192,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[JUMP_BRANCH_2] <= IDEXReg[JUMP_BRANCH_2];
 				if (opcodeEX == OP_BNE) begin
 					if (inputA != inputB) begin 
-						PCReg <= EXMEMReg[ID_ALU_RESULT];
+						PCReg <= IDEXReg[ID_ALU_RESULT];
 						IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
@@ -318,7 +318,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[JUMP_BRANCH_2] <= IDEXReg[JUMP_BRANCH_2];
 				if (opcodeEX == OP_BNE) begin
 					if (inputA != inputB) begin 
-						PCReg <= EXMEMReg[ID_ALU_RESULT];
+						PCReg <= IDEXReg[ID_ALU_RESULT];
 						IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
@@ -443,7 +443,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[JUMP_BRANCH_2] <= IDEXReg[JUMP_BRANCH_2];
 				if (opcodeEX == OP_BNE) begin
 					if (inputA != inputB) begin 
-						PCReg <= EXMEMReg[ID_ALU_RESULT];
+						PCReg <= IDEXReg[ID_ALU_RESULT];
 						IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
@@ -568,7 +568,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[JUMP_BRANCH_2] <= IDEXReg[JUMP_BRANCH_2];
 				if (opcodeEX == OP_BNE) begin
 					if (inputA != inputB) begin 
-						PCReg <= EXMEMReg[ID_ALU_RESULT];
+						PCReg <= IDEXReg[ID_ALU_RESULT];
 						IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
@@ -693,7 +693,7 @@ module PIPELINED_CPU(clk);
 				EXMEMReg[JUMP_BRANCH_2] <= IDEXReg[JUMP_BRANCH_2];
 				if (opcodeEX == OP_BNE) begin
 					if (inputA != inputB) begin 
-						PCReg <= EXMEMReg[ID_ALU_RESULT];
+						PCReg <= IDEXReg[ID_ALU_RESULT];
 						IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
