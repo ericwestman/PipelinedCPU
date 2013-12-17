@@ -2,8 +2,11 @@
 # Shivam Desai, Kris Groth, Sarah Strohkorb, Eric Westman
 
 # Load the value of 1 and 2 from memory into registers $t1 and $t2 respectively
-lw $t1, 1021
-lw $t2, 1022
+#lw $t1, 1021
+#lw $t2, 1022
+
+li $t1, 1
+li $t2, 2
 
 # xor the value stored in $t1 (1) with 99
 # expected output: 98
@@ -21,15 +24,11 @@ slt $t6, $t1, $t5
 # if $t1 != $t1 (1 != 1) go to the jumpelseif 
 # because (1 != 1) is false, we'll do the $t1 + $t2 = 1 + 2 = 3, stored in $t7
 # then we'll jump to the end
-bne $t1, $t1, jumpelseif
+bne $t1, $t2, jumpelseif
 	add $t7, $t1, $t2
-	j jumpend
+	add $t8, $t2, $t1
 jumpelseif:
-	sub $t8, $t2, $t1
-jumpend:
-
-li $t1, 10
-li $t2, 9
+add $t9, $t2, $t1
 
 # A test of the difference function
 # difference(8, 4) = 4

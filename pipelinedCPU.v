@@ -139,6 +139,11 @@ module PIPELINED_CPU(clk);
    		ForwardReg2[1] = 'h00000000;
    		ForwardReg2[2] = 'h00000000;
 
+   		IFIDReg[JUMP_BRANCH] 	= ACTIVE;
+   		IDEXReg[JUMP_BRANCH] 	= ACTIVE;
+   		EXMEMReg[JUMP_BRANCH]	= ACTIVE;
+   		MEMWBReg[JUMP_BRANCH] 	= ACTIVE;
+
 		$readmemb("datahazard.dat", Memory);
 
 	end
