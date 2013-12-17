@@ -26,13 +26,8 @@ slt $t6, $t1, $t5
 # then we'll jump to the end
 bne $t1, $t2, jumpelseif
 	add $t7, $t1, $t2
-	j jumpend
 jumpelseif:
-	sub $t8, $t2, $t1
-jumpend:
-
-li $t1, 10
-li $t2, 9
+add $t9, $t2, $t1
 
 # A test of the difference function
 # difference(8, 4) = 4

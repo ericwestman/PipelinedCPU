@@ -25,11 +25,17 @@ add wave -noupdate {/MY_CPU/Regfile[13]}
 add wave -noupdate {/MY_CPU/Regfile[14]}
 add wave -noupdate {/MY_CPU/Regfile[15]}
 add wave -noupdate {/MY_CPU/Regfile[24]}
-add wave -noupdate {/MY_CPU/IFIDReg[JUMP_BRANCH]}
-add wave -noupdate {/MY_CPU/IDEXReg[JUMP_BRANCH]}
-add wave -noupdate {/MY_CPU/EXMEMReg[JUMP_BRANCH]}
-add wave -noupdate {/MY_CPU/MEMWBReg[JUMP_BRANCH]}
-
+add wave -noupdate {/MY_CPU/Regfile[25]}
+add wave -noupdate {/MY_CPU/Regfile[16]}
+add wave -noupdate {/MY_CPU/Regfile[17]}
+add wave -noupdate {/MY_CPU/IFIDReg[JUMP_BRANCH_1]}
+add wave -noupdate {/MY_CPU/IDEXReg[JUMP_BRANCH_1]}
+add wave -noupdate {/MY_CPU/EXMEMReg[JUMP_BRANCH_1]}
+add wave -noupdate {/MY_CPU/MEMWBReg[JUMP_BRANCH_1]}
+add wave -noupdate {/MY_CPU/IFIDReg[JUMP_BRANCH_2]}
+add wave -noupdate {/MY_CPU/IDEXReg[JUMP_BRANCH_2]}
+add wave -noupdate {/MY_CPU/EXMEMReg[JUMP_BRANCH_2]}
+add wave -noupdate {/MY_CPU/MEMWBReg[JUMP_BRANCH_2]}
 
 # 6) Run for x ns
 run 500
