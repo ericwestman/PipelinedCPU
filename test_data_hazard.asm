@@ -24,13 +24,16 @@ slt $t6, $t1, $t5
 # if $t1 != $t1 (1 != 1) go to the jumpelseif 
 # because (1 != 1) is false, we'll do the $t1 + $t2 = 1 + 2 = 3, stored in $t7
 # then we'll jump to the end
-bne $t1, $t2, jumpelseif
-	add $t7, $t1, $t2
-	add $t8, $t2, $t1
-	add $s0, $t2, $t1
-	add $s1, $t2, $t1
-jumpelseif:
-add $t9, $t2, $t1
+#bne $t1, $t2, jumpelseif
+#	add $t7, $t1, $t2
+#jumpelseif:
+#add $t9, $t2, $t1
+
+add $t8, $t2, $t1
+j here
+add $s0, $t2, $t1
+here:
+add $s1, $t2, $t1
 
 # A test of the difference function
 # difference(8, 4) = 4
