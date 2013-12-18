@@ -158,7 +158,7 @@ module PIPELINED_CPU(clk);
 		case (stateA)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE && (opcodeEX != OP_R_TYPE && funcEX != FUNC_JR) && opcodeID != OP_J && opcodeID != OP_JAL) begin
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) || opcodeID == OP_J || opcodeID == OP_JAL)) begin
 					PCReg <= PCReg + 1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
@@ -174,7 +174,7 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
-				if (opcodeEX != OP_BNE) begin 
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR))) begin 
 					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
 				end 
 				if(opcodeID == OP_BNE) begin
@@ -290,7 +290,7 @@ module PIPELINED_CPU(clk);
 		case (stateB)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE && (opcodeEX != OP_R_TYPE && funcEX != FUNC_JR) && opcodeID != OP_J && opcodeID != OP_JAL) begin
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) || opcodeID == OP_J || opcodeID == OP_JAL)) begin
 					PCReg <= PCReg + 1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
@@ -306,7 +306,7 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
-				if (opcodeEX != OP_BNE) begin 
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR))) begin 
 					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
 				end 
 				if(opcodeID == OP_BNE) begin
@@ -420,7 +420,7 @@ module PIPELINED_CPU(clk);
 		case (stateC)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE && (opcodeEX != OP_R_TYPE && funcEX != FUNC_JR) && opcodeID != OP_J && opcodeID != OP_JAL) begin
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) || opcodeID == OP_J || opcodeID == OP_JAL)) begin
 					PCReg <= PCReg + 1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
@@ -436,7 +436,7 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
-				if (opcodeEX != OP_BNE) begin 
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR))) begin 
 					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
 				end 
 				if(opcodeID == OP_BNE) begin
@@ -550,7 +550,7 @@ module PIPELINED_CPU(clk);
 		case (stateD)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE && (opcodeEX != OP_R_TYPE && funcEX != FUNC_JR) && opcodeID != OP_J && opcodeID != OP_JAL) begin
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) || opcodeID == OP_J || opcodeID == OP_JAL)) begin
 					PCReg <= PCReg + 1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
@@ -566,7 +566,7 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
-				if (opcodeEX != OP_BNE) begin 
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR))) begin 
 					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
 				end 
 				if(opcodeID == OP_BNE) begin
@@ -680,7 +680,7 @@ module PIPELINED_CPU(clk);
 		case (stateE)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE && (opcodeEX != OP_R_TYPE && funcEX != FUNC_JR) && opcodeID != OP_J && opcodeID != OP_JAL) begin
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) || opcodeID == OP_J || opcodeID == OP_JAL)) begin
 					PCReg <= PCReg + 1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
@@ -696,7 +696,7 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
-				if (opcodeEX != OP_BNE) begin 
+				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR))) begin 
 					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
 				end 
 				if(opcodeID == OP_BNE) begin
