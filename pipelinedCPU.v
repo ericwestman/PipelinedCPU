@@ -158,8 +158,10 @@ module PIPELINED_CPU(clk);
 		case (stateA)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE || opcodeID != OP_J) begin
+				if (opcodeEX != OP_BNE && opcodeID != OP_J && opcodeID != OP_JAL) begin
 					PCReg <= PCReg + 1;
+					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateA <= ID;
@@ -172,15 +174,17 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
+				if (opcodeEX != OP_BNE) begin 
+					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
+				end 
 				if(opcodeID == OP_BNE) begin
 					IDEXReg[ID_ALU_RESULT] <= PCReg + immediateID;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 				end
-				else if (opcodeID == OP_J) begin
-					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				else if (opcodeID == OP_J || opcodeID == OP_JAL) begin
+					PCReg <= {IFIDReg[PC][31:28],IFIDReg[IR][25],IFIDReg[IR][25],IFIDReg[IR][25:0]};
 					IFIDReg[JUMP_BRANCH_1] <= INACTIVE;
 				end
-				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
 					if (funcID == FUNC_SYSCALL) stateA <= -1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
@@ -209,14 +213,9 @@ module PIPELINED_CPU(clk);
 				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
 							EXMEMReg[B] <= inputB;
-						end
-						else if (opcodeEX == OP_JAL) begin
-							PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 						end
 						else if (opcodeEX == OP_XORI) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA^immediateEX;
@@ -235,10 +234,6 @@ module PIPELINED_CPU(clk);
 								EXMEMReg[EX_ALU_RESULT] <= (inputA < inputB) ? 1 : 0;
 							end
 						end
-					end
-					else begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
 				
@@ -290,8 +285,10 @@ module PIPELINED_CPU(clk);
 		case (stateB)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE || opcodeID != OP_J) begin
+				if (opcodeEX != OP_BNE && opcodeID != OP_J && opcodeID != OP_JAL) begin
 					PCReg <= PCReg + 1;
+					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateB <= ID;
@@ -304,18 +301,19 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
+				if (opcodeEX != OP_BNE) begin 
+					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
+				end 
 				if(opcodeID == OP_BNE) begin
 					IDEXReg[ID_ALU_RESULT] <= PCReg + immediateID;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 				end
-				else if (opcodeID == OP_J) begin
-					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				else if (opcodeID == OP_J || opcodeID == OP_JAL) begin
+					PCReg <= {IFIDReg[PC][31:28],IFIDReg[IR][25],IFIDReg[IR][25],IFIDReg[IR][25:0]};
 					IFIDReg[JUMP_BRANCH_1] <= INACTIVE;
 				end
-				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (funcID == FUNC_SYSCALL) stateA <= -1;
-					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					if (funcID == FUNC_SYSCALL) stateB <= -1;
 				end
 
 				stateB <= EX;
@@ -341,14 +339,9 @@ module PIPELINED_CPU(clk);
 				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
 							EXMEMReg[B] <= inputB;
-						end
-						else if (opcodeEX == OP_JAL) begin
-							PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 						end
 						else if (opcodeEX == OP_XORI) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA^immediateEX;
@@ -367,10 +360,6 @@ module PIPELINED_CPU(clk);
 								EXMEMReg[EX_ALU_RESULT] <= (inputA < inputB) ? 1 : 0;
 							end
 						end
-					end
-					else begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
 				
@@ -421,8 +410,10 @@ module PIPELINED_CPU(clk);
 		case (stateC)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE || opcodeID != OP_J) begin
+				if (opcodeEX != OP_BNE && opcodeID != OP_J && opcodeID != OP_JAL) begin
 					PCReg <= PCReg + 1;
+					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateC <= ID;
@@ -435,18 +426,19 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
+				if (opcodeEX != OP_BNE) begin 
+					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
+				end 
 				if(opcodeID == OP_BNE) begin
 					IDEXReg[ID_ALU_RESULT] <= PCReg + immediateID;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 				end
-				else if (opcodeID == OP_J) begin
-					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				else if (opcodeID == OP_J || opcodeID == OP_JAL) begin
+					PCReg <= {IFIDReg[PC][31:28],IFIDReg[IR][25],IFIDReg[IR][25],IFIDReg[IR][25:0]};
 					IFIDReg[JUMP_BRANCH_1] <= INACTIVE;
 				end
-				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (funcID == FUNC_SYSCALL) stateA <= -1;
-					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					if (funcID == FUNC_SYSCALL) stateC <= -1;
 				end
 
 				stateC <= EX;
@@ -472,14 +464,9 @@ module PIPELINED_CPU(clk);
 				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
 							EXMEMReg[B] <= inputB;
-						end
-						else if (opcodeEX == OP_JAL) begin
-							PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 						end
 						else if (opcodeEX == OP_XORI) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA^immediateEX;
@@ -498,10 +485,6 @@ module PIPELINED_CPU(clk);
 								EXMEMReg[EX_ALU_RESULT] <= (inputA < inputB) ? 1 : 0;
 							end
 						end
-					end
-					else begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
 				
@@ -552,8 +535,10 @@ module PIPELINED_CPU(clk);
 		case (stateD)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE || opcodeID != OP_J) begin
+				if (opcodeEX != OP_BNE && opcodeID != OP_J && opcodeID != OP_JAL) begin
 					PCReg <= PCReg + 1;
+					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateD <= ID;
@@ -566,18 +551,19 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
+				if (opcodeEX != OP_BNE) begin 
+					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
+				end 
 				if(opcodeID == OP_BNE) begin
 					IDEXReg[ID_ALU_RESULT] <= PCReg + immediateID;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 				end
-				else if (opcodeID == OP_J) begin
-					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				else if (opcodeID == OP_J || opcodeID == OP_JAL) begin
+					PCReg <= {IFIDReg[PC][31:28],IFIDReg[IR][25],IFIDReg[IR][25],IFIDReg[IR][25:0]};
 					IFIDReg[JUMP_BRANCH_1] <= INACTIVE;
 				end
-				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (funcID == FUNC_SYSCALL) stateA <= -1;
-					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					if (funcID == FUNC_SYSCALL) stateD <= -1;
 				end
 
 				stateD <= EX;
@@ -603,14 +589,9 @@ module PIPELINED_CPU(clk);
 				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
 							EXMEMReg[B] <= inputB;
-						end
-						else if (opcodeEX == OP_JAL) begin
-							PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 						end
 						else if (opcodeEX == OP_XORI) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA^immediateEX;
@@ -629,10 +610,6 @@ module PIPELINED_CPU(clk);
 								EXMEMReg[EX_ALU_RESULT] <= (inputA < inputB) ? 1 : 0;
 							end
 						end
-					end
-					else begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
 				
@@ -683,8 +660,10 @@ module PIPELINED_CPU(clk);
 		case (stateE)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				if (opcodeEX != OP_BNE || opcodeID != OP_J) begin
+				if (opcodeEX != OP_BNE && opcodeID != OP_J && opcodeID != OP_JAL) begin
 					PCReg <= PCReg + 1;
+					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateE <= ID;
@@ -697,18 +676,19 @@ module PIPELINED_CPU(clk);
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
+				if (opcodeEX != OP_BNE) begin 
+					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
+				end 
 				if(opcodeID == OP_BNE) begin
 					IDEXReg[ID_ALU_RESULT] <= PCReg + immediateID;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 				end
-				else if (opcodeID == OP_J) begin
-					PCReg <= {IFIDReg[PC][31:28],IR[25],IR[25],IR[25:0]};
+				else if (opcodeID == OP_J || opcodeID == OP_JAL) begin
+					PCReg <= {IFIDReg[PC][31:28],IFIDReg[IR][25],IFIDReg[IR][25],IFIDReg[IR][25:0]};
 					IFIDReg[JUMP_BRANCH_1] <= INACTIVE;
 				end
-				
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
-					if (funcID == FUNC_SYSCALL) stateA <= -1;
-					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
+					if (funcID == FUNC_SYSCALL) stateE <= -1;
 				end
 
 				stateE <= EX;
@@ -734,14 +714,9 @@ module PIPELINED_CPU(clk);
 				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
 							EXMEMReg[B] <= inputB;
-						end
-						else if (opcodeEX == OP_JAL) begin
-							PCReg <= {IDEXReg[PC][31:28],IR[25],IR[25],IR[25:0]};
 						end
 						else if (opcodeEX == OP_XORI) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA^immediateEX;
@@ -760,10 +735,6 @@ module PIPELINED_CPU(clk);
 								EXMEMReg[EX_ALU_RESULT] <= (inputA < inputB) ? 1 : 0;
 							end
 						end
-					end
-					else begin
-						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
-						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
 				
