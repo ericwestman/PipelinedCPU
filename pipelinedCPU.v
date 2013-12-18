@@ -211,11 +211,6 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
-				else if (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) begin
-					PCReg <= inputA;
-					IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
-					IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
-				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
@@ -228,6 +223,8 @@ module PIPELINED_CPU(clk);
 						else if (opcodeEX == OP_R_TYPE) begin
 							if (funcEX == FUNC_JR) begin
 								PCReg <= inputA;
+								IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
+								IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 							end
 							else if (funcEX == FUNC_ADD) begin
 								EXMEMReg[EX_ALU_RESULT] <= inputA + inputB;
@@ -342,11 +339,6 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
-				else if (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) begin
-					PCReg <= inputA;
-					IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
-					IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
-				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
@@ -359,6 +351,8 @@ module PIPELINED_CPU(clk);
 						else if (opcodeEX == OP_R_TYPE) begin
 							if (funcEX == FUNC_JR) begin
 								PCReg <= inputA;
+								IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
+								IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 							end
 							else if (funcEX == FUNC_ADD) begin
 								EXMEMReg[EX_ALU_RESULT] <= inputA + inputB;
@@ -472,11 +466,6 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
-				else if (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) begin
-					PCReg <= inputA;
-					IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
-					IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
-				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
@@ -489,6 +478,8 @@ module PIPELINED_CPU(clk);
 						else if (opcodeEX == OP_R_TYPE) begin
 							if (funcEX == FUNC_JR) begin
 								PCReg <= inputA;
+								IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
+								IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 							end
 							else if (funcEX == FUNC_ADD) begin
 								EXMEMReg[EX_ALU_RESULT] <= inputA + inputB;
@@ -602,11 +593,6 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
-				else if (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) begin
-					PCReg <= inputA;
-					IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
-					IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
-				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
@@ -619,6 +605,8 @@ module PIPELINED_CPU(clk);
 						else if (opcodeEX == OP_R_TYPE) begin
 							if (funcEX == FUNC_JR) begin
 								PCReg <= inputA;
+								IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
+								IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 							end
 							else if (funcEX == FUNC_ADD) begin
 								EXMEMReg[EX_ALU_RESULT] <= inputA + inputB;
@@ -732,11 +720,6 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
-				else if (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) begin
-					PCReg <= inputA;
-					IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
-					IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
-				end
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
@@ -749,6 +732,8 @@ module PIPELINED_CPU(clk);
 						else if (opcodeEX == OP_R_TYPE) begin
 							if (funcEX == FUNC_JR) begin
 								PCReg <= inputA;
+								IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
+								IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 							end
 							else if (funcEX == FUNC_ADD) begin
 								EXMEMReg[EX_ALU_RESULT] <= inputA + inputB;
