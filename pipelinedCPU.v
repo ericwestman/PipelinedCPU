@@ -158,7 +158,9 @@ module PIPELINED_CPU(clk);
 		case (stateA)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				PCReg <= PCReg + 1;
+				if (opcodeEX != OP_BNE) begin
+					PCReg <= PCReg + 1;
+				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateA <= ID;
 				stateB <= IF;
@@ -197,6 +199,7 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
 					else begin
+						PCReg <= PCReg + 1;
 						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
@@ -284,7 +287,9 @@ module PIPELINED_CPU(clk);
 		case (stateB)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				PCReg <= PCReg + 1;
+				if (opcodeEX != OP_BNE) begin
+					PCReg <= PCReg + 1;
+				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateB <= ID;
 				stateC <= IF;
@@ -323,6 +328,7 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
 					else begin
+						PCReg <= PCReg + 1;
 						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
@@ -409,7 +415,9 @@ module PIPELINED_CPU(clk);
 		case (stateC)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				PCReg <= PCReg + 1;
+				if (opcodeEX != OP_BNE) begin
+					PCReg <= PCReg + 1;
+				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateC <= ID;
 				stateD <= IF;
@@ -448,6 +456,7 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
 					else begin
+						PCReg <= PCReg + 1;
 						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
@@ -534,7 +543,9 @@ module PIPELINED_CPU(clk);
 		case (stateD)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				PCReg <= PCReg + 1;
+				if (opcodeEX != OP_BNE) begin
+					PCReg <= PCReg + 1;
+				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateD <= ID;
 				stateE <= IF;
@@ -573,6 +584,7 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
 					else begin
+						PCReg <= PCReg + 1;
 						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
@@ -659,7 +671,9 @@ module PIPELINED_CPU(clk);
 		case (stateE)
 			IF: begin
 				IFIDReg[IR] <= Memory[PCReg];
-				PCReg <= PCReg + 1;
+				if (opcodeEX != OP_BNE) begin
+					PCReg <= PCReg + 1;
+				end
 				IFIDReg[PC] <= PCReg + 1;
 				stateE <= ID;
 				stateA <= IF;
@@ -698,6 +712,7 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 					end
 					else begin
+						PCReg <= PCReg + 1;
 						IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
