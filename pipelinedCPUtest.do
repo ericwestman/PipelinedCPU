@@ -28,8 +28,8 @@ add wave -noupdate {/MY_CPU/Regfile[14]}
 add wave -noupdate {/MY_CPU/Regfile[15]}
 add wave -noupdate {/MY_CPU/Regfile[16]}
 add wave -noupdate {/MY_CPU/Regfile[17]}
-#add wave -noupdate {/MY_CPU/Regfile[24]}
-#add wave -noupdate {/MY_CPU/Regfile[25]}
+add wave -noupdate {/MY_CPU/Regfile[24]}
+add wave -noupdate {/MY_CPU/Regfile[25]}
 add wave -noupdate {/MY_CPU/Regfile[29]}
 add wave -noupdate {/MY_CPU/Regfile[31]}
 add wave -noupdate {/MY_CPU/IFIDReg[JUMP_BRANCH_1]}
