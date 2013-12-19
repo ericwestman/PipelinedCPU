@@ -4,8 +4,10 @@ module PIPELINED_CPU(clk);
 	input clk;
 
 	// Registers
-	// reg [31:0] PC, Regfile[0:31], Memory[0:1023], MDR, A, B, ALUResult, IR;
 	reg [31:0] PCReg, Regfile[0:31], Memory[0:1023], ForwardReg0[0:2], ForwardReg1[0:2], ForwardReg2[0:2];
+	
+	// The different states or 'pipes' of our system, we can have 5 instructions executing at a time, 
+	// each represnted by a different state (A-E)
 	reg [2:0]  stateA, stateB, stateC, stateD, stateE;
 
 	// Parameters for the registers that are between the stages
@@ -30,9 +32,13 @@ module PIPELINED_CPU(clk);
 	parameter WRITE_MEM				= 2;
 
 	// reg JUMP_BRANCH_1 and JUMP_BRANCH_2 possible values
-	parameter 	INACTIVE 	= 0;	// no, don't
-	parameter 	ACTIVE 		= 1;	// yes, execute it
+	// INACTIVE indicates that the instruciton should not be executed
+	// ACTIVE indicates that the instruction should be executed
+	parameter 	INACTIVE 	= 0;	
+	parameter 	ACTIVE 		= 1;	
 
+	// Defining the registers that transfer the data between states
+	// For example the IFIDReg stores the values that are passed from the IF to the ID phases
 	reg [31:0] IFIDReg [0:9], IDEXReg [0:9], EXMEMReg [0:9], MEMWBReg [0:9]; 
 
 	// Wires
@@ -53,7 +59,7 @@ module PIPELINED_CPU(clk);
 	// opcode(6), target(26)
 
 
-	// Assign wires
+	// Assign the op codes and function codes based on their location within the instruction
 	assign opcodeID = IFIDReg[IR][31:26];
 	assign opcodeEX = IDEXReg[IR][31:26];
 	assign opcodeMEM = EXMEMReg[IR][31:26];
@@ -62,17 +68,16 @@ module PIPELINED_CPU(clk);
 	assign funcID = IFIDReg[IR][5:0];
 	assign funcEX = IDEXReg[IR][5:0];
 
+	// assign the register values from the instruction
 	assign rs = IFIDReg[IR][25:21];
 	assign rtID = IFIDReg[IR][20:16];
 	assign rtWB = MEMWBReg[IR][20:16];
 	assign rd = MEMWBReg[IR][15:11];
 	
+	// assign the immediate values stored in the instruciton
 	assign immediateID = {{16{IFIDReg[IR][15]}}, IFIDReg[IR][15:0]};
 	assign immediateEX = {{16{IDEXReg[IR][15]}}, IDEXReg[IR][15:0]};
 	assign immediateWB = {{16{MEMWBReg[IR][15]}}, MEMWBReg[IR][15:0]};
-
-	//assign sa = IR[10:6];
-	//assign target = IR[25:0];
 
 	// opcodes
 	parameter OP_LI   = 6'b001001;
@@ -91,7 +96,7 @@ module PIPELINED_CPU(clk);
 	parameter FUNC_SLT  = 6'b101010;
 	parameter FUNC_SYSCALL = 6'b001100;
 
-	// stateA definitions
+	// state definitions
 	parameter IDLE 	= -1;
 	parameter IF 	=  0;
 	parameter ID	=  1;
@@ -99,6 +104,8 @@ module PIPELINED_CPU(clk);
 	parameter MEM 	=  3;
 	parameter WB 	=  4;
 
+	// Stores the value of the 'A' value that can either be taken from forwarded values from previous calculations 
+	// (WRITE_FORWARD_DATA), values written to memory (WRITE_MEM), or form the values located in the requested register (IDEXReg[A])
 	assign inputA = 
 		((IDEXReg[IR][25:21] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg0[FORWARD_DATA]:
 		((IDEXReg[IR][25:21] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg0[FORWARD_DATA]]:
@@ -108,6 +115,7 @@ module PIPELINED_CPU(clk);
 		((IDEXReg[IR][25:21] == ForwardReg2[DEST_REG]) && ForwardReg2[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg2[FORWARD_DATA]]:
 			IDEXReg[A];
 
+	// The same as inputA, except for the B argument
 	assign inputB = 
 		((IDEXReg[IR][20:16] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_FORWARD_DATA) ? ForwardReg0[FORWARD_DATA]:
 		((IDEXReg[IR][20:16] == ForwardReg0[DEST_REG]) && ForwardReg0[WRITE_VAL] == WRITE_MEM) ? Memory[ForwardReg0[FORWARD_DATA]]:
@@ -118,6 +126,7 @@ module PIPELINED_CPU(clk);
 			IDEXReg[B];
 
 	integer i;
+	// Initializing memory, forwarding registers, and jump/branch registers
 	initial begin 
 		PCReg = 0;
 		stateA = IF; stateB = IDLE; stateC = IDLE; stateD = IDLE; stateE = IDLE; 
@@ -149,56 +158,114 @@ module PIPELINED_CPU(clk);
    		EXMEMReg[JUMP_BRANCH_2]	= ACTIVE;
    		MEMWBReg[JUMP_BRANCH_2] = ACTIVE;
 
+   	// read in the data from the desired '.dat' file
 		$readmemb("datahazard.dat", Memory);
 
 	end
+
+
+	/*
+		This section of our code, looks like this:
+
+			always @(posedge clk) begin
+
+				case(stateA)
+				endcase
+
+				case(stateB)
+				endcase
+
+				case(stateC)
+				endcase
+
+				case(stateD)
+				endcase
+
+				case(stateE)
+				endcase
+
+			end
+
+			Where each case contains 5 options: IF, ID, EX, MEM, and WB, which represent the 5 stages in our 
+			pipeline CPU:
+
+			IF - Instruction Fetch
+			ID - Instruction Decode
+			EX - Execution
+			MEM - Data Memory
+			WB - Write Back
+
+			The comments for stateA will be explanatory and should be referenced for any questions related to the other
+			states (which are identical, with the exception of state-specific items)
+
+	*/
+
 
 	always @(posedge clk) begin
 
 		case (stateA)
 			IF: begin
+				// Load the current instruciton
 				IFIDReg[IR] <= Memory[PCReg];
+				// If the opcode/funciton code indicates that the instruction is NOT in the EX phase is a BNE or JR or if the insruciton
+				// in the ID phase is NOT in J or JAL, set the instruction to active and increment the program counter
 				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR) || opcodeID == OP_J || opcodeID == OP_JAL)) begin
 					PCReg <= PCReg + 1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 					IFIDReg[JUMP_BRANCH_2] <= ACTIVE;
 				end
+				// Update the program counter in the register to be passed to the ID phase
 				IFIDReg[PC] <= PCReg + 1;
+				// Set the next state of this instruction to the ID phase
 				stateA <= ID;
+				// Set the next instruction to start at the IF phase
 				stateB <= IF;
 			end
 			
 			ID: begin
+				// Load the values into the appropriate registers from the IF stage and from the registers needed for this phase
 				IDEXReg[A] <= Regfile[rs];
 				IDEXReg[B] <= Regfile[rtID];
 				IDEXReg[IR] <= IFIDReg[IR];
 				IDEXReg[PC] <= IFIDReg[PC];
 				IDEXReg[JUMP_BRANCH_2] <= IFIDReg[JUMP_BRANCH_2];
+				// If the opcode in the EX phase is NOT BNE or JR, forward the jump/branch indicator
 				if (!(opcodeEX == OP_BNE || (opcodeEX == OP_R_TYPE && funcEX == FUNC_JR))) begin 
 					IDEXReg[JUMP_BRANCH_1] <= IFIDReg[JUMP_BRANCH_1];
 				end 
+				// If the current instruciton is a BNE instruction, increment the pgrogram counter accordingly to the branching destination
+				// and set the next instruction to an active state
 				if(opcodeID == OP_BNE) begin
 					IDEXReg[ID_ALU_RESULT] <= PCReg + immediateID;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 				end
+				// If the current instruction is J or JAL, set the program counter to the desired value and set the next instruction to inactive
 				else if (opcodeID == OP_J || opcodeID == OP_JAL) begin
 					PCReg <= {IFIDReg[PC][31:28],IFIDReg[IR][25],IFIDReg[IR][25],IFIDReg[IR][25:0]};
 					IFIDReg[JUMP_BRANCH_1] <= INACTIVE;
 				end
+				// If the opcode is anything else (that our team is executing), if it's a SYSCAL, end it
+				// also set the next instruction to an active state
 				else if (opcodeID == OP_R_TYPE || opcodeID == OP_XORI || opcodeID == OP_LW || opcodeID == OP_SW) begin
 					if (funcID == FUNC_SYSCALL) stateA <= -1;
 					IFIDReg[JUMP_BRANCH_1] <= ACTIVE;
 				end
 
+				// Move on to the execute phase
 				stateA <= EX;
 
 			end
 
 			EX: begin
+				// Load the values into the appropriate registers from the ID stage and from the registers needed for this phase
 				EXMEMReg[IR] <= IDEXReg[IR];
 				EXMEMReg[PC] <= IDEXReg[PC];
 				EXMEMReg[JUMP_BRANCH_1] <= IDEXReg[JUMP_BRANCH_1];
 				EXMEMReg[JUMP_BRANCH_2] <= IDEXReg[JUMP_BRANCH_2];
+				// If the current instruction's opcode is BNE and: 
+				// 		- the two comparing values are not equal -> set the program counter to the caluclated value from the ID phase
+				//																								and set the next 2 instructions to inactive
+				//    - the two comparing alues are equal -> increment the program counter as normal and set the next 2 instructions to active
 				if (opcodeEX == OP_BNE) begin
 					if (inputA != inputB) begin 
 						PCReg <= IDEXReg[ID_ALU_RESULT];
@@ -211,27 +278,36 @@ module PIPELINED_CPU(clk);
 						IDEXReg[JUMP_BRANCH_1] <= ACTIVE;
 					end
 				end
+				// If the current instruciton is not BNE, execute it only if it's active
 				else begin
 					if (IDEXReg[JUMP_BRANCH_1] == ACTIVE && IDEXReg[JUMP_BRANCH_2] == ACTIVE) begin
+						// if it's a LW or SW instruction, caluclate A + immediate and store the B value
 						if(opcodeEX == OP_LW || opcodeEX == OP_SW) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA + immediateEX;
 							EXMEMReg[B] <= inputB;
 						end
+						// XOR XORI's inputs
 						else if (opcodeEX == OP_XORI) begin
 							EXMEMReg[EX_ALU_RESULT] <= inputA^immediateEX;
 						end
+						// For the R-type instructions
 						else if (opcodeEX == OP_R_TYPE) begin
+							// For the JR, increment the program counter to the value specified by the input register and
+							// set the next two instrcutions to inactive
 							if (funcEX == FUNC_JR) begin
 								PCReg <= inputA;
 								IFIDReg[JUMP_BRANCH_2] <= INACTIVE;
 								IDEXReg[JUMP_BRANCH_1] <= INACTIVE;
 							end
+							// for ADD, add the two inputs
 							else if (funcEX == FUNC_ADD) begin
 								EXMEMReg[EX_ALU_RESULT] <= inputA + inputB;
 							end
+							// for SUB, subtract the second input from the first
 							else if (funcEX == FUNC_SUB) begin
 								EXMEMReg[EX_ALU_RESULT] <= inputA - inputB;
 							end
+							// for SLT, do the A < B boolean comparison
 							else if (funcEX == FUNC_SLT) begin
 								EXMEMReg[EX_ALU_RESULT] <= (inputA < inputB) ? 1 : 0;
 							end
@@ -239,43 +315,50 @@ module PIPELINED_CPU(clk);
 					end
 				end
 				
+				// increment stateA to the next state -> MEM
 				stateA <= MEM;
 
 			end
 
 			MEM: begin
+				// Load the values into the appropriate registers from the ID stage and from the registers needed for this phase
 				MEMWBReg[IR] <= EXMEMReg[IR];
 				MEMWBReg[PC] <= EXMEMReg[PC];
 				MEMWBReg[JUMP_BRANCH_1] <= EXMEMReg[JUMP_BRANCH_1];
 				MEMWBReg[JUMP_BRANCH_2] <= EXMEMReg[JUMP_BRANCH_2];
 				MEMWBReg[EX_ALU_RESULT] <= EXMEMReg[EX_ALU_RESULT];
+				// Only do these memory operations if the current instruction is active
 				if (EXMEMReg[JUMP_BRANCH_1] == ACTIVE && EXMEMReg[JUMP_BRANCH_2] == ACTIVE) begin
+					// For the LW case, load a specified value from memory from the given address
 					if(opcodeMEM == OP_LW) begin
 						MEMWBReg[MDR] <= Memory[EXMEMReg[EX_ALU_RESULT]];
 					end
+					// For the SW case, store a specified value in memory to the given location
 					else if(opcodeMEM == OP_SW ) begin
 						Memory[EXMEMReg[EX_ALU_RESULT]] <= EXMEMReg[B];
 					end
 				end
 			
+				// move onto the WB phase
 				stateA <= WB;
 			
 			end
 
 			WB: begin
+				// Only do these memory operations if the current instruction is active
 				if (MEMWBReg[JUMP_BRANCH_1] == ACTIVE && MEMWBReg[JUMP_BRANCH_2] == ACTIVE) begin
+					// Store the value loaded from memory into the destination register
 					if (opcodeWB == OP_LW) Regfile[rtWB] <= MEMWBReg[MDR];
-					
+					// Store the XORI computed value into the destination register
 					else if(opcodeWB == OP_XORI) Regfile[rtWB] <= MEMWBReg[EX_ALU_RESULT];
-					
+					// Store all R-type instrucitons' result into the destination register
 					else if(opcodeWB == OP_R_TYPE) Regfile[rd] <= MEMWBReg[EX_ALU_RESULT];
-					
+					// Store the LI's value into the destination register
 					else if (opcodeWB == OP_LI) begin
 						Regfile[rtWB] <= immediateWB;
 					end
-
+					// For JAL, store the original program counter's value into the $ra register
 					else if (opcodeWB == OP_JAL) begin
-						// Store PC in $ra
 						Regfile[31]<= MEMWBReg[PC];
 					end
 				end
@@ -791,9 +874,19 @@ module PIPELINED_CPU(clk);
 			end
 		endcase
 
+		/*
+			FORWARDING -
+
+				This is the section that deals with all of the data forwarding. 
+
+		*/
+		// For the R-type instruction, indicate the the data forwarded is caluclated in the EX phase and 
+		// indicate the destination register of the value caluclated in the EX phase
 		if (opcodeEX == OP_R_TYPE) begin 
 			ForwardReg0[WRITE_VAL] <= WRITE_FORWARD_DATA;
 			ForwardReg0[DEST_REG] <= IDEXReg[IR][15:11];
+			// Store the appropriate value that will be stored in the destination register, this will be the value
+			// that is forwarded 
 			if (funcEX == FUNC_ADD) begin
 				ForwardReg0[FORWARD_DATA] <= inputA + inputB;
 			end
@@ -804,27 +897,38 @@ module PIPELINED_CPU(clk);
 				ForwardReg0[FORWARD_DATA] <= (inputA < inputB) ? 1 : 0;
 			end
 		end
+		// For the XORI instruciton, indicate the the data forwarded is caluclated in the EX phase, 
+		// indicate the destination register of the value caluclated in the EX phase, and store the value 
+		// that will be stored in the destination register
 		else if (opcodeEX == OP_XORI) begin
 			ForwardReg0[WRITE_VAL] <= WRITE_FORWARD_DATA;
 			ForwardReg0[DEST_REG] <= IDEXReg[IR][20:16];
 			ForwardReg0[FORWARD_DATA] <= inputA^immediateEX;
 		end
+		// For the LI instruciton, indicate the the data forwarded is loaded in the ID phase, 
+		// indicate the destination register of the value loaded in the ID phase, and store the value 
+		// that will be stored in the destination register
 		else if (opcodeEX == OP_LI) begin
 			ForwardReg0[WRITE_VAL] <= WRITE_FORWARD_DATA;
 			ForwardReg0[DEST_REG] <= IDEXReg[IR][20:16];
 			ForwardReg0[FORWARD_DATA] <= immediateEX;
 		end
+		// For the LW instruction, indicate that the data forwarded is either being loaded/stored into/from memory, 
+		// indicate the destination register of that value, and get the desired value
 		else if (opcodeEX == OP_LW) begin
 			ForwardReg0[WRITE_VAL] <= WRITE_MEM;
 			ForwardReg0[DEST_REG] <= IDEXReg[IR][20:16];
 			ForwardReg0[FORWARD_DATA] <= inputA + immediateEX;
 		end
+		// for any other code, indicate that there's nothing forwarded 
 		else begin
 			ForwardReg0[WRITE_VAL] <= NO_WRITE;
 			ForwardReg0[DEST_REG] <= NO_WRITE;
 			ForwardReg0[FORWARD_DATA] <= NO_WRITE;
 		end
 
+		// Since we need to keep around the value for a few stages, we have ForwardReg0 and ForwardReg1, and after
+		// every cycle, we must move the values through this forwarded data 'stack', if you will 
 		ForwardReg1[FORWARD_DATA] <= ForwardReg0[FORWARD_DATA];
 		ForwardReg1[WRITE_VAL] <= ForwardReg0[WRITE_VAL];
 		ForwardReg1[DEST_REG] <= ForwardReg0[DEST_REG];
@@ -842,9 +946,8 @@ endmodule
 
 
 module PIPELINED_CPU_TESTBENCH();
-  // Inputs
+	// Our clock is set to go forever
   reg clk;
-
   initial begin
     clk = 0;
     forever begin
@@ -852,8 +955,6 @@ module PIPELINED_CPU_TESTBENCH();
     end
   end
 
-
   PIPELINED_CPU MY_CPU( clk );
 
-  
 endmodule
