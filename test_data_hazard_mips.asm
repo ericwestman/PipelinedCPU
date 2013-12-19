@@ -1,5 +1,5 @@
 # Final Project Test Code
-# Cannot be run in MARS because it loads data from memory, but should be used in the implementation run in ModelSim
+# Can be assembled and run in MARS
 # Shivam Desai, Kris Groth, Sarah Strohkorb, Eric Westman
 
 # Load the value of 1 and 2 from memory into registers $t1 and $t2 respectively
@@ -34,4 +34,3 @@ jal jumping_maybe_linking
 li $t9, 10	# a meaningless isntruction to show that it is skipped (by the jal) ($t9 should be 0)
 jumping_maybe_linking:
 li $s0, 5	# this line should be executed, so $s0 should be 5
-
