@@ -20,7 +20,7 @@ sub $t5, $t4, $t1
 slt $t6, $t1, $t5
 
 # if $t1 != $t5 (1 != 2) go to the jumpelseif 
-# because (1 != 2) is false, we'll do the $t2 - $t1 = 2 - 1 = 1, stored in $t8
+# because (1 != 2) is false, we'll do the $t2 - $t1 = 2 - 1 = 1, stored in $t8 (not currently working correctly)
 # then we'll jump to the end
 bne $t1, $t5, jumpelseif
         add $t7, $t1, $t2
